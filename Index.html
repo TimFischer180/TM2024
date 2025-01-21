@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Methoden-Handbuch</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1c1c1c;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .search-bar {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            background-color: #333;
+            border: none;
+            margin-left: -40px;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .welcome {
+            margin: 20px 0;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .button {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+        }
+
+        .red { background-color: #e74c3c; }
+        .blue { background-color: #3498db; }
+        .yellow { background-color: #f1c40f; }
+        .green { background-color: #2ecc71; }
+
+        .details {
+            margin-top: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .details.active {
+            display: flex;
+        }
+
+        .method-tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 10px;
+        }
+
+        .method-tile {
+            background-color: white;
+            color: black;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .method-tile:hover {
+            transform: scale(1.05);
+        }
+
+        .method-description {
+            margin-top: 10px;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            display: none;
+        }
+
+        .method-description.active {
+            display: block;
+        }
+
+        .method-goal {
+            font-weight: bold;
+            font-size: 16px;
+            color: #f39c12;
+        }
+
+        .method-description p {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Suche nach Methoden..." oninput="searchMethods()">
+        <button>&#128269;</button>
+    </div>
+
+    <div class="welcome">
+        HALLO TIM!<br>
+        Wie kann ich dir behilflich sein?
+    </div>
+
+    <div class="buttons">
+        <div class="button red" onclick="showDetails('Priorisieren')">Priorisieren</div>
+        <div class="button blue" onclick="showDetails('Filtern')">Filtern</div>
+        <div class="button yellow" onclick="showDetails('Bookmarks')">Bookmarks</div>
+        <div class="button green" onclick="showDetails('Editor')">Editor</div>
+    </div>
+
+    <div class="details" id="details">
+        <h3 id="details-title"></h3>
+        <div class="method-tiles" id="method-tiles"></div>
+    </div>
+
+    <script>
+        // Beispielmethoden für alle Kategorien
+        const allMethods = {
+            Priorisieren: [
+                { title: 'Methode 1', goal: 'Setze wichtige Aufgaben zuerst', description: 'Diese Methode hilft dabei, Aufgaben nach ihrer Wichtigkeit zu priorisieren.' },
+                { title: 'Methode 2', goal: 'Nutze das Eisenhower-Prinzip', description: 'Unterteile Aufgaben nach Dringlichkeit und Wichtigkeit, um schnell zu entscheiden, was zuerst erledigt werden muss.' }
+            ],
+            Filtern: [
+                { title: 'Methode A', goal: 'Eliminiere Unwichtiges', description: 'Konzentriere dich nur auf die Aufgaben, die zum Erfolg führen und filtere die unwichtigen Aufgaben heraus.' },
+                { title: 'Methode B', goal: 'Verwende die 80/20 Regel', description: 'Fokussiere dich auf die 20% der Aufgaben, die 80% der Ergebnisse bringen.' }
+            ],
+            Bookmarks: [
+                { title: 'Bookmark 1', goal: 'Speichere interessante Artikel', description: 'Sammle interessante Artikel, die du später lesen oder weiterverwenden möchtest.' },
+                { title: 'Bookmark 2', goal: 'Organisiere deine Lesezeichen', description: 'Nutze Kategorien und Tags, um deine Lesezeichen zu sortieren und schnell darauf zugreifen zu können.' }
+            ],
+            Editor: [
+                { title: 'Editor Tool 1', goal: 'Erstelle strukturierte Dokumente', description: 'Verwende die Tools zum Erstellen klar strukturierter und leicht verständlicher Dokumente.' },
+                { title: 'Editor Tool 2', goal: 'Nutze Vorlagen', description: 'Erstelle mit Vorlagen schnell neue Dokumente, die du regelmäßig benötigst.' }
+            ]
+        };
+
+        let currentCategory = '';
+
+        function showDetails(category) {
+            currentCategory = category;
+            const details = document.getElementById('details');
+            const title = document.getElementById('details-title');
+            const methodTiles = document.getElementById('method-tiles');
+            
+            title.textContent = category;
+            const methods = allMethods[category] || [];
+            methodTiles.innerHTML = '';
+
+            methods.forEach(method => {
+                const tile = document.createElement('div');
+                tile.className = 'method-tile';
+                tile.innerHTML = `
+                    <strong>${method.title}</strong>
+                    <p class="method-goal">${method.goal}</p>
+                `;
+                tile.onclick = function() {
+                    showDescription(method.description);
+                };
+                methodTiles.appendChild(tile);
+            });
+
+            details.classList.add('active');
+        }
+
+        function showDescription(description) {
+            const descriptionElement = document.createElement('div');
+            descriptionElement.className = 'method-description active';
+            descriptionElement.innerHTML = `<p>${description}</p>`;
+            
+            // Append the description element to the details section
+            const details = document.getElementById('details');
+            details.appendChild(descriptionElement);
+        }
+
+        // Funktion zum Suchen von Methoden
+        function searchMethods() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const results = [];
+
+            // Durchsuche alle Methoden nach dem Suchbegriff
+            for (let category in allMethods) {
+                const methods = allMethods[category];
+                methods.forEach(method => {
+                    if (method.title.toLowerCase().includes(query) || method.description.toLowerCase().includes(query)) {
+                        results.push(method);
+                    }
+                });
+            }
+
+            displaySearchResults(results);
+        }
+
+        // Anzeige der Suchergebnisse
+        function displaySearchResults(results) {
+            const methodTiles = document.getElementById('method-tiles');
+            methodTiles.innerHTML = '';
+
+            if (results.length === 0) {
+                methodTiles.innerHTML = "<p>Keine Ergebnisse gefunden.</p>";
+            }
+
+            results.forEach(method => {
+                const tile = document.createElement('div');
+                tile.className = 'method-tile';
+                tile.innerHTML = `
+                    <strong>${method.title}</strong>
+                    <p class="method-goal">${method.goal}</p>
+                `;
+                tile.onclick = function() {
+                    showDescription(method.description);
+                };
+                methodTiles.appendChild(tile);
+            });
+        }
+    </script>
+</body>
+</html>
